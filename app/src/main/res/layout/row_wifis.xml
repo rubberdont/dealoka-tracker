@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:padding="2dp"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="SSID"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:id="@+id/tv_ssid"
+        android:textAllCaps="true" />
+
+    <View
+        android:layout_height="match_parent"
+        android:layout_width="1dp"
+        android:layout_marginLeft="1dp"
+        android:layout_marginRight="1dp"
+        android:background="@color/grey_cloud" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="BSSID"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:id="@+id/tv_bssid"
+        android:textAllCaps="true" />
+
+    <View
+        android:layout_height="match_parent"
+        android:layout_width="1dp"
+        android:layout_marginLeft="1dp"
+        android:layout_marginRight="1dp"
+        android:background="@color/grey_cloud" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="Node Changes"
+        android:textSize="11sp"
+        android:gravity="center"
+        android:id="@+id/tv_serve_time" />
+
+    <View
+        android:layout_height="match_parent"
+        android:layout_width="1dp"
+        android:layout_marginLeft="1dp"
+        android:layout_marginRight="1dp"
+        android:background="@color/grey_cloud" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="Signal"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:id="@+id/tv_signal" />
+    <View
+        android:layout_height="match_parent"
+        android:layout_width="1dp"
+        android:layout_marginLeft="1dp"
+        android:layout_marginRight="1dp"
+        android:background="@color/grey_cloud" />
+
+    <TextView
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="Status"
+        android:gravity="center"
+        android:textSize="11sp"
+        android:id="@+id/tv_status" />
+
+</LinearLayout>

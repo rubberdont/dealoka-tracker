@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">DealokaV2</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="towers">TOWERS</string>
+    <string name="map">MAP</string>
+    <string name="acc_pt">ACC. PT.</string>
+</resources>

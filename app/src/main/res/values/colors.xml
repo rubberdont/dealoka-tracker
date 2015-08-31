@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#fff</color>
+    <color name="dodger_blue">#1589FF</color>
+    <color name="bg_trans">#B3000000</color>
+    <color name="grey_cloud">#B6B6B4</color>
+    <color name="blue_ivy">#3090C7</color>
+    <color name="black">#000</color>
+    <color name="scarlet_red_pressed">#FF2400</color>
+    <color name="scarlet_red">#ffff070e</color>
+
+    <item name="colorPrimary" type="color">#ffe51230</item>
+    <item name="colorPrimaryDark" type="color">#ffe55754</item>
+    <item name="transparent_white" type="color">#11ffffff</item>
+    <item name="transparent_blue" type="color">#2f398fff</item>
+    <item name="green" type="color">#c02cff05</item>
+    <item name="darkgreen" type="color">#dd08b000</item>
+</resources>
