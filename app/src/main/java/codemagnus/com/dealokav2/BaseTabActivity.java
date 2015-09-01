@@ -376,12 +376,9 @@ public class BaseTabActivity extends ActionBarActivity {
                             viewActiveFirst = true;
                         }
 
-                        List<WifiObject> prevData = getCurrentResult();
-                        if (!GeneralUtils.sameLists(prevData, wifis) || viewActiveFirst) {
-                            setCurrentList(wifis);
-                            if (urlConnection == null) {
-                                doSubmitWifisTask(wifis);
-                            }
+                        setCurrentList(wifis);
+                        if (urlConnection == null) {
+                            doSubmitWifisTask(wifis);
                         }
                     }
 
@@ -490,15 +487,6 @@ public class BaseTabActivity extends ActionBarActivity {
         if(getTowers() == null) {
             setTowers(new ArrayList<Tower>());
         }
-
-        if(getTowers().size() > 0) {
-            if(towersPrimary.size() > 0 && getTowers().size() > 0) {
-                if(towersPrimary.get(0).getCellId() == getTowers().get(0).getCellId()
-                        && towersPrimary.get(0).getLocationAreaCode() == getTowers().get(0).getLocationAreaCode()) {
-                    return;
-                }
-            }
-        }
         if (getTowerListFragment() != null) {
             getTowerListFragment().initPhoneDetails();
         }
@@ -540,32 +528,30 @@ public class BaseTabActivity extends ActionBarActivity {
         }
 
         if(pushData) {
-            if(!GeneralUtils.sameTowerLists(getTowers(), towersPrimary)) {
-                if (towersPrimary.size() > 0) {
-                    if (lastKnownLocation != null) {
-                        if(getSwitchCompat() != null && getSwitchCompat().isChecked()) {
-                            if(towersurlConnection == null) {
-                                //TODO here push the data for available towers
-                                List<Tower> sendTowers = new ArrayList<>();
-                                if(towersNeighbor != null && towersNeighbor.size() > 0) {
-                                    sendTowers.add(towersPrimary.get(0));
-                                    sendTowers.addAll(towersNeighbor);
-                                } else {
-                                    sendTowers = getTowersWithInRange(getTowers());
-                                }
-                                if(sendTowers.size() > 0) {
-                                    if(towersPrimary.size() > 0) {
-                                        submitTowers(sendTowers);
-                                        return;
-                                    }
-                                }
-                                towersurlConnection = null;
+            if (towersPrimary.size() > 0) {
+                if (lastKnownLocation != null) {
+                    if(getSwitchCompat() != null && getSwitchCompat().isChecked()) {
+                        if(towersurlConnection == null) {
+                            //TODO here push the data for available towers
+                            List<Tower> sendTowers = new ArrayList<>();
+                            if(towersNeighbor != null && towersNeighbor.size() > 0) {
+                                sendTowers.add(towersPrimary.get(0));
+                                sendTowers.addAll(towersNeighbor);
+                            } else {
+                                sendTowers = getTowersWithInRange(getTowers());
                             }
+                            if(sendTowers.size() > 0) {
+                                if(towersPrimary.size() > 0) {
+                                    submitTowers(sendTowers);
+                                    return;
+                                }
+                            }
+                            towersurlConnection = null;
                         }
-                    } else {
-                        if(getSwitchCompat() != null && getSwitchCompat().isChecked())
-                            Toast.makeText(BaseTabActivity.this, "Please enable your device location provider.", Toast.LENGTH_LONG).show();
                     }
+                } else {
+                    if(getSwitchCompat() != null && getSwitchCompat().isChecked())
+                        Toast.makeText(BaseTabActivity.this, "Please enable your device location provider.", Toast.LENGTH_LONG).show();
                 }
             }
         }
