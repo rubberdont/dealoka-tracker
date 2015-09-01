@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.Toolbar;
 import android.telephony.CellLocation;
 import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
@@ -85,10 +86,11 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
     private Marker gpsMarker;
 
     private TextView tvCurrentTower;
-    private ArrayList<Tower> savedTowers;
+    public ArrayList<Tower> savedTowers;
     private TextView textClock;
     private CountDownTimer countDownTimer;
     private View rootView;
+    private Toolbar toolbar;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -106,6 +108,7 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
 
         tvCurrentTower = (TextView) rootView.findViewById(R.id.tv_current_tower);
         textClock = (TextView) rootView.findViewById(R.id.textClock);
+        toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
         return rootView;
     }
 
@@ -120,15 +123,8 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
         super.onActivityCreated(savedInstanceState);
         setRetainInstance(true);
         activity    = (BaseTabActivity) getActivity();
-
-        spinner     = (Spinner) activity.getToolBar().findViewById(R.id.spinner_nav);
-        spinner     .setVisibility(View.VISIBLE);
-
-        if(activity.getSwitchCompat() != null)
-            activity.getSwitchCompat().setVisibility(View.GONE);
-
         towerManager = TowerManager.getInstance(activity);
-        sharedpreferences = activity.getSharedPreferences("Delay", Context.MODE_PRIVATE);
+        sharedpreferences = activity.getSharedPreferences("Delay-Map", Context.MODE_PRIVATE);
 
         setTowerRequestDelay(delayValues[sharedpreferences.getInt("spinner:position", 0)]);
         locationUtils = new LocationUtils(activity, 1000, 50);
@@ -136,7 +132,7 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
         locationUtils.getLocationUpdates(LocationUtils.GPS_PROVIDER, locationListener);
         locationUtils.getLocationUpdates(LocationUtils.NETWORK_PROVIDER, locationListener);
 
-        activity.getToolBar().setTitle("Triangulation");
+        toolbar.setTitle("Triangulation");
 
         getMapFragment();
     }
@@ -146,7 +142,6 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
             googleMap = mapFragment.getMap();
             if(googleMap != null){
                 googleMap.setMyLocationEnabled(true);
-                requestLocationByTowers();
             }
         }
     }
@@ -160,8 +155,6 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        spinner.setVisibility(View.GONE);
-        towerManager.stopTowerUpdate();
 
         if(countDownTimer != null)countDownTimer.cancel();
 
@@ -171,6 +164,10 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
         if(locationUtils != null ) {
             locationUtils.stopLocationUpdates();
         }
+        if(activity.getToolBar() != null)
+            activity.getToolBar().setVisibility(View.VISIBLE);
+        if(activity.getSwitchCompat() != null)
+            activity.getSwitchCompat().setVisibility(View.VISIBLE);
     }
 
     private void killOldMap() {
@@ -196,6 +193,10 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
         super.onStart();
 
         isMapBoundsSet = false;
+        if(activity.getToolBar() != null)
+            activity.getToolBar().setVisibility(View.GONE);
+
+        spinner     = (Spinner) toolbar.findViewById(R.id.spinner_nav);
         spinner.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_spinner_dropdown_item, delayTitles));
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -226,6 +227,7 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
     }
 
     private void requestLocationByTowers(){
+        displayCurrentTower();
         towerManager.setOnTowersChangedListener(new TowerManager.TowersChangeCallback() {
             @Override
             public void didTowersChanged(ArrayList<Tower> towers, Exception e) {
@@ -246,20 +248,14 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
         });
     }
 
-    private void displayCurrentTower() {
-        if(towerManager != null) {
-            CellLocation cellLocation = towerManager.getCellLocation();
-            if(cellLocation != null && cellLocation instanceof GsmCellLocation){
-                GsmCellLocation gsmCellLocation = (GsmCellLocation) cellLocation;
-                String mnc = "MNC: " + towerManager.getMobileNetworkCode();
-                String mcc = "MCC: " + towerManager.getMobileCountryCode();
-                String cid = "CID: " + gsmCellLocation.getCid();
-                String lac = "LAC: " + gsmCellLocation.getLac();
-                String signal = "SIGNAL: " + towerManager.getSignalStrength();
-                tvCurrentTower.setText("Current tower: \n" + mnc + "\n" + mcc + "\n" +cid + "\n" + lac + "\n" + signal); //
-            } else {
-                tvCurrentTower.setVisibility(View.GONE);
-            }
+    public void displayCurrentTower() {
+        if(activity.getTowerManager() != null) {
+            String mnc = "MNC: " + towerManager.getMobileNetworkCode();
+            String mcc = "MCC: " + towerManager.getMobileCountryCode();
+            String cid = "CID: " + towerManager.getCellLocation().getCid();
+            String lac = "LAC: " + towerManager.getCellLocation().getLac();
+            String signal = "SIGNAL: " + towerManager.getSignalStrength();
+            tvCurrentTower.setText("Current tower: \n" + mnc + "\n" + mcc + "\n" +cid + "\n" + lac + "\n" + signal);
         }
     }
 
@@ -296,7 +292,7 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
         textClock.setText(ms);
     }
 
-    private void saveTowers(ArrayList<Tower> towers) {
+    public void saveTowers(ArrayList<Tower> towers) {
         Log.d(tag, "Added " + towers.size() + " new Towers");
 
         if (savedTowers == null) savedTowers = new ArrayList<>();
@@ -304,7 +300,7 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
             savedTowers.add(tower);
         }
         if(!GeneralUtils.sameTowerLists(activity.getTowers(), savedTowers)) {
-            activity.setTowers(savedTowers);
+//            activity.setTowers(savedTowers);
             if (savedTowers.size() > 0) {
                 if (lastKnownLocation != null) {
                     if(activity.getSwitchCompat() != null && activity.getSwitchCompat().isChecked()) {
@@ -472,7 +468,7 @@ public class VisualizationFragment  extends Fragment implements CustomMapFragmen
         }
     };
 
-    private TowerManager.LocationRequestCallback locationRequestCallback = new TowerManager.LocationRequestCallback() {
+    public TowerManager.LocationRequestCallback locationRequestCallback = new TowerManager.LocationRequestCallback() {
         @Override
         public void onSuccess(LatLng latLng, List<Tower> towers) {
             Log.e(tag, "locationRequestCallback: onSuccess " + latLng + " towers: " + towers.size());

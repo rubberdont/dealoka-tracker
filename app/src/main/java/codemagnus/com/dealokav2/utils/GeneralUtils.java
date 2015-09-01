@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.TimeZone;
 
@@ -208,9 +209,8 @@ public class GeneralUtils {
     }
 
     public static boolean checkIfWithInRange(Calendar calendar, Tower tower) {
-        Calendar firstLimit= calendar;
         Calendar secondLimit = Calendar.getInstance();
-        secondLimit.setTime(firstLimit.getTime());
+        secondLimit.setTime(calendar.getTime());
         secondLimit.add(Calendar.SECOND, -30);
         Calendar towerTime = null;
         try {
@@ -220,10 +220,10 @@ public class GeneralUtils {
         }
         boolean lessTime = false;
         //check if time is within 30 secs.
-        if (towerTime.getTime().before(firstLimit.getTime())
+        if (towerTime.getTime().before(calendar.getTime())
                 && towerTime.getTime().after(secondLimit.getTime())) {
             lessTime =  true;
-        } else if (firstLimit.getTime().equals(towerTime.getTime())) {
+        } else if (calendar.getTime().equals(towerTime.getTime())) {
             lessTime =  true;
         }else if (secondLimit.getTime().equals(towerTime.getTime())) {
             lessTime =  true;
@@ -234,7 +234,7 @@ public class GeneralUtils {
 
     public static Calendar stringTimeToCalendar(String strDate, TimeZone timezone) throws java.text.ParseException {
         String FORMAT_DATETIME =  "MMM dd yyyy, kk:mm:ss";
-        SimpleDateFormat sdf = new SimpleDateFormat(FORMAT_DATETIME);
+        SimpleDateFormat sdf = new SimpleDateFormat(FORMAT_DATETIME, Locale.getDefault());
         sdf.setTimeZone(timezone);
 
         String dateStr = GeneralUtils.getOnlyDate() + ", " + strDate;

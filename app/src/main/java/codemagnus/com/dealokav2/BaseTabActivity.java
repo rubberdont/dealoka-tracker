@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.TabHost;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -81,6 +82,7 @@ public class BaseTabActivity extends ActionBarActivity {
     private TowerAdapter towerAdapter;
     private String randomSession = "";
     boolean viewActiveFirst = true;
+    private String selectedTimeMilis = delayTitles[0];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +103,7 @@ public class BaseTabActivity extends ActionBarActivity {
 
     }
 
-    private void setUpTimeSpinner() {
+    public void setUpTimeSpinner() {
         sharedpreferences = getSharedPreferences("Delay", Context.MODE_PRIVATE);
         spinner     = (Spinner) getToolBar().findViewById(R.id.spinner_nav);
         spinner     .setVisibility(View.VISIBLE);
@@ -115,10 +117,12 @@ public class BaseTabActivity extends ActionBarActivity {
                 }
                 setTowerRequestDelay(delayValues[position]);
                 sharedpreferences.edit().putInt("spinner:position", position).apply();
+                selectedTimeMilis = spinner.getSelectedItem().toString();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+                selectedTimeMilis = delayTitles[0];
             }
         });
 
@@ -214,6 +218,18 @@ public class BaseTabActivity extends ActionBarActivity {
         tabHost	.setCurrentTab(0);
         tabHost	.getTabWidget().setStripEnabled(false);
         tabHost	.getTabWidget().setDividerDrawable(null);
+        tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+                if (tabId.equals(VisualizationFragment.tag)) {
+                    spinner.setVisibility(View.GONE);
+                    switchCompat.setVisibility(View.GONE);
+                }  else {
+                    spinner.setVisibility(View.VISIBLE);
+                    switchCompat.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
 
     public Toolbar getToolBar() {
@@ -347,6 +363,7 @@ public class BaseTabActivity extends ActionBarActivity {
     }
 
     private void startNewCountDown() {
+        Log.e(TAG, countDownTimer != null ? "NOT NULL" : "NULL");
         if(countDownTimer == null) {
             Log.d(TAG, "Tower requested delay: " + towerRequestDelay);
             countDownTimer = new CountDownTimer(towerRequestDelay, 1000) {
@@ -369,20 +386,11 @@ public class BaseTabActivity extends ActionBarActivity {
                         initTowerListAdapter(towerPrimary, towerNeighbor);
 
                     if(wifis != null) {
-                        boolean viewActiveFirst = false;
-
-                        if (getCurrentResult() == null) {
-                            setCurrentList(wifis);
-                            viewActiveFirst = true;
-                        }
-
                         setCurrentList(wifis);
                         if (urlConnection == null) {
                             doSubmitWifisTask(wifis);
                         }
                     }
-
-
                     countDownTimer.start();
                 }
             };
@@ -396,6 +404,9 @@ public class BaseTabActivity extends ActionBarActivity {
 
     private TowerListFragment getTowerListFragment(){
         return (TowerListFragment) getSupportFragmentManager().findFragmentByTag(TowerListFragment.tag);
+    }
+    private VisualizationFragment getVisualizationFragment(){
+        return (VisualizationFragment) getSupportFragmentManager().findFragmentByTag(VisualizationFragment.tag);
     }
 
     //TODO
@@ -413,8 +424,8 @@ public class BaseTabActivity extends ActionBarActivity {
                     towerAdapter.getTowers().get(x).setPosted(false);
                 }
                 for (int i = 0; i < sendTowers.size(); i++) {
+                    Tower tower = sendTowers.get(i);
                     for (int x = 0; x < towerAdapter.getTowers().size(); x++) {
-                        Tower tower = sendTowers.get(i);
                         Tower savedTower = towerAdapter.getTowers().get(x);
 
                         if (GeneralUtils.checkIfTowersAreSame(tower, savedTower)) {
@@ -448,7 +459,7 @@ public class BaseTabActivity extends ActionBarActivity {
             if(getTowerManager() != null) {
                 Tower primaryTower = getTowerManager().getPrimaryTower();
                 if(primaryTower != null) {
-                    primaryTower.setMillis(spinner.getSelectedItem().toString());
+                    primaryTower.setMillis(selectedTimeMilis);
                     if(getTowers() == null) {
                         setTowers(new ArrayList<Tower>());
                         getTowers().add(primaryTower);
@@ -474,6 +485,13 @@ public class BaseTabActivity extends ActionBarActivity {
 //                Log.d(TAG, "expired");
 //                viewActiveFirst = false;
 
+            Log.e(TAG, "New Towers: " + towersPrimary.toString());
+            if(getVisualizationFragment() != null){
+                getVisualizationFragment().displayCurrentTower();
+                getVisualizationFragment().saveTowers(towersPrimary);
+                towerManager.getCurrentLocationByTowers(towersPrimary, getVisualizationFragment().locationRequestCallback);
+                getVisualizationFragment().savedTowers = towersPrimary;
+            }
 
             towerPrimary = towersPrimary;
             towerNeighbor = towersNeighbor;
@@ -483,32 +501,34 @@ public class BaseTabActivity extends ActionBarActivity {
         }
     };
 
-    private void initTowerListAdapter(ArrayList<Tower> towersPrimary, ArrayList<Tower> towerNeighbor) {
-        if(getTowers() == null) {
-            setTowers(new ArrayList<Tower>());
-        }
-        if (getTowerListFragment() != null) {
-            getTowerListFragment().initPhoneDetails();
-        }
-
-        if(getLastItemTowers() != null) {
-            Tower towerSaved = getTowers().get(0);
-            Tower lastTowers = getLastItemTowers().get(0);
-
-            if (GeneralUtils.checkIfTowersAreSame(lastTowers, towerSaved)) {
-                towerSaved.setMillis("" + spinner.getSelectedItem().toString());
-                getTowers().set(0, towerSaved);
+    public void initTowerListAdapter(ArrayList<Tower> towersPrimary, ArrayList<Tower> towerNeighbor) {
+        try{
+            if(getTowers() == null) {
+                setTowers(new ArrayList<Tower>());
             }
-        }
+            if (getTowerListFragment() != null) {
+                getTowerListFragment().initPhoneDetails();
+            }
 
-        for(int i = 0; i < towersPrimary.size();i++) {
-            Tower tower = towersPrimary.get(i);
-            tower.setMillis("" +  spinner.getSelectedItem().toString());
-            getTowers().add(0, tower);
-        }
+            if(getLastItemTowers() != null) {
+                Tower towerSaved = getTowers().get(0);
+                Tower lastTowers = getLastItemTowers().get(0);
 
-        lastItemTowers = towersPrimary;
-        setUpTowers(towersPrimary, towerNeighbor, true);
+                if (GeneralUtils.checkIfTowersAreSame(lastTowers, towerSaved)) {
+                    towerSaved.setMillis("" + selectedTimeMilis);
+                    getTowers().set(0, towerSaved);
+                }
+            }
+
+            for(int i = 0; i < towersPrimary.size();i++) {
+                Tower tower = towersPrimary.get(i);
+                tower.setMillis("" +  selectedTimeMilis);
+                getTowers().add(0, tower);
+            }
+        }finally {
+            lastItemTowers = towersPrimary;
+            setUpTowers(getTowers(), towerNeighbor, true);
+        }
     }
 
     private void setUpTowers(ArrayList<Tower> towersPrimary,ArrayList<Tower> towersNeighbor, boolean pushData) {
@@ -523,8 +543,8 @@ public class BaseTabActivity extends ActionBarActivity {
             towerAdapter.setTowers(getTowers());
         }
 
-        if(getTowerListFragment() != null) {
-            getTowerListFragment().setListAdapter(towerAdapter);
+        if (getTowerListFragment() != null) {
+            getTowerListFragment().initPhoneDetails();
         }
 
         if(pushData) {
@@ -535,9 +555,11 @@ public class BaseTabActivity extends ActionBarActivity {
                             //TODO here push the data for available towers
                             List<Tower> sendTowers = new ArrayList<>();
                             if(towersNeighbor != null && towersNeighbor.size() > 0) {
+                                Log.e("Neighbor", "INSIDE HERE");
                                 sendTowers.add(towersPrimary.get(0));
                                 sendTowers.addAll(towersNeighbor);
                             } else {
+                                Log.e("!Neighbor", "INSIDE HERE");
                                 sendTowers = getTowersWithInRange(getTowers());
                             }
                             if(sendTowers.size() > 0) {
@@ -563,8 +585,7 @@ public class BaseTabActivity extends ActionBarActivity {
             Calendar newestCalendar = GeneralUtils.stringTimeToCalendar(savedTowers.get(0).getTime(), TimeZone.getDefault());
             for(Tower tower: savedTowers) {
                 if(GeneralUtils.checkIfWithInRange(newestCalendar, tower)) {
-                    if(tower.toString().contains("" + tower.getCellId()))
-                        pushTowers.add(tower);
+                    pushTowers.add(tower);
                 }
             }
         } catch (ParseException e) {

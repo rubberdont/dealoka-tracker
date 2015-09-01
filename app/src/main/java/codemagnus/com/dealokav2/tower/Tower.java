@@ -232,6 +232,7 @@ public class Tower {
         JSONObject objTower = new JSONObject();
         try {
             objTower.put("cell_id", "" + cellId);
+            objTower.put("time", "" + getTime());
         } catch (JSONException e) {
             e.printStackTrace();
         }

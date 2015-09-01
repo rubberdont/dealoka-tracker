@@ -15,4 +15,5 @@
     <item name="transparent_blue" type="color">#2f398fff</item>
     <item name="green" type="color">#c02cff05</item>
     <item name="darkgreen" type="color">#dd08b000</item>
+    <item name="toolbar_bg" type="color">#dc150d03</item>
 </resources>

@@ -58,14 +58,17 @@ public class TowerListFragment extends Fragment {
         if(activity.getSwitchCompat() != null)
             activity.getSwitchCompat().setVisibility(View.VISIBLE);
 
-        getUserLastKnownLocation();
-
         initPhoneDetails();
         getUserLastKnownLocation();
         activity.getToolBar().setTitle("Tower List");
+    }
 
-        if(activity.getTowerAdapter() != null) {
-            setListAdapter(activity.getTowerAdapter());
+    @Override
+    public void onStart() {
+        super.onStart();
+        TowerAdapter adapter = activity.getTowerAdapter();
+        if(adapter != null) {
+            setListAdapter(adapter);
         }
     }
 
@@ -103,13 +106,5 @@ public class TowerListFragment extends Fragment {
 
     public void setListAdapter(TowerAdapter adapter){
         listView.setAdapter(adapter);
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        Log.d(tag, "Toggle onDestroyView");
-        if(activity.getSwitchCompat() != null)
-            activity.getSwitchCompat().setVisibility(View.GONE);
     }
 }
